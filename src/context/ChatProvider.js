@@ -10,7 +10,10 @@ const ChatProvider = (props) => {
     email: null,
     estado: null
   }
+
   const [usuario, setUsuario] = useState(dataUsuario)
+  const [mensajes, setMensajes] = useState([])
+
 
   useEffect(() => {
     detectarUsuario()
@@ -25,6 +28,7 @@ const ChatProvider = (props) => {
           email: user.email,
           estado: true
         })
+        cargarMensajes()
       } else {
         //user exists -> not logged in
         setUsuario({
@@ -48,8 +52,28 @@ const ChatProvider = (props) => {
     auth.signOut()
   }
 
+  const cargarMensajes = () => {
+    db.collection("chat")
+      .onSnapshot(query => {
+        const arrayMensajes = query.docs.map(item => item.data())
+        setMensajes(arrayMensajes)
+      })
+  }
+
+  const agregarMensajes = async (textoInput, uidChat) => {
+    try {
+      await db.collection("chat").add({
+        fecha: Date.now(),
+        texto: textoInput,
+        uid: uidChat
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   return (
-    <ChatContext.Provider value={{ usuario, ingresoUsuario, cerrarSesion }}>
+    <ChatContext.Provider value={{ usuario, ingresoUsuario, cerrarSesion, mensajes, agregarMensajes }}>
       {props.children}
     </ChatContext.Provider>
   )
